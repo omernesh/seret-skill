@@ -1,6 +1,52 @@
 ---
 name: seret-movies
-description: Search Israeli movie showtimes, ratings, and info from seret.co.il — the leading Hebrew movie database. Use when the user asks about movies in Israel, Israeli cinema showtimes, what's playing now, or movie info in Hebrew.
+description: >-
+  Search Israeli movie showtimes, ratings, and cinema info from seret.co.il.
+  Use when user asks about movies playing in Israel, Israeli cinema showtimes,
+  "ma makrineem hayom", "sratim hadashim", "seret", movie tickets in Israel,
+  what's showing in theaters, or upcoming Israeli film releases.
+  Fetches real-time data from seret.co.il including bilingual titles (Hebrew + English),
+  Seret ratings, IMDB links, trailers, and showtimes by city/area.
+  Do NOT use for international movie databases without Israeli context (use IMDB/TMDB directly instead).
+license: MIT
+compatibility: >-
+  Requires web fetch capability (HTTP GET + POST) and HTML parsing.
+  Responses use windows-1255 encoding (Hebrew). No API keys needed.
+  Works with Claude Code, Cursor, OpenClaw, Hermes Agent, and any agent with web access.
+metadata:
+  author: omernesh
+  author_email: omernesher@gmail.com
+  version: 1.0.0
+  category: localization
+  tags:
+    he:
+      - קולנוע
+      - סרטים
+      - הקרנות
+      - קולנוע ישראלי
+      - ישראל
+    en:
+      - cinema
+      - movies
+      - showtimes
+      - israeli-cinema
+      - israel
+  display_name:
+    he: "סרט - מידע על סרטים בישראל"
+    en: Seret - Israeli Movie Information
+  display_description:
+    he: "חיפוש שעות הקרנה, דירוגים ומידע על סרטים מ-seret.co.il — מאגר הסרטים המוביל בישראל"
+    en: >-
+      Search Israeli movie showtimes, ratings, and cinema info from seret.co.il —
+      Israel's leading movie database
+  supported_agents:
+    - claude-code
+    - cursor
+    - github-copilot
+    - windsurf
+    - opencode
+    - codex
+    - openclaw
 ---
 
 # Seret.co.il Movie Information Skill
