@@ -12,7 +12,7 @@
 
 ## What is this?
 
-A single markdown file (`seret-movies.md`) that teaches any AI agent how to fetch and parse movie data from seret.co.il. No code, no dependencies, no API keys — just documented endpoints and HTML parsing patterns that any LLM with web access can follow.
+A single markdown file (`SKILL.md`) that teaches any AI agent how to fetch and parse movie data from seret.co.il. No code, no dependencies, no API keys — just documented endpoints and HTML parsing patterns that any LLM with web access can follow.
 
 ## Capabilities
 
@@ -33,10 +33,10 @@ Copy the skill file to your skills directory:
 
 ```bash
 # Global (all projects)
-cp seret-movies.md ~/.claude/skills/
+cp SKILL.md ~/.claude/skills/seret-movies.md
 
 # Or in a Claude Code plugin
-cp seret-movies.md ~/.claude/plugins/my-plugin/skills/
+cp SKILL.md ~/.claude/plugins/my-plugin/skills/seret-movies.md
 ```
 
 Then just ask naturally:
@@ -50,11 +50,11 @@ Then just ask naturally:
 
 ### OpenClaw / Hermes Agent / Other
 
-Drop `seret-movies.md` into your agent's skill or prompt directory. The file uses standard markdown frontmatter — adapt the loading mechanism to your platform.
+Drop `SKILL.md` into your agent's skill or prompt directory. The file uses standard markdown frontmatter — adapt the loading mechanism to your platform.
 
 ### Raw LLM Usage
 
-Paste the contents of `seret-movies.md` into your system prompt. The skill instructs the LLM how to use web fetch tools to query seret.co.il endpoints.
+Paste the contents of `SKILL.md` into your system prompt. The skill instructs the LLM how to use web fetch tools to query seret.co.il endpoints.
 
 ## How It Works
 
