@@ -128,16 +128,31 @@ Days: <div class="dayline"> containing:
   - Showtimes: <div class="stbox" title="D/M/YYYY | Hall N">HH:MM</div>
 ```
 
-### 6. Movie Showtimes Table (by area + day)
+### 6. Movie Showtimes Table (by city + day)
 
 ```
 POST https://www.seret.co.il/movies/movieTable.asp
 Content-Type: application/x-www-form-urlencoded
 
-Body: d={dayNumber}&f_areaId={areaId}
+Body: d={dayNumber}&f_areaId={cityId}
 ```
 
-**Day numbers:** Start from current day. Check the `<select name="d">` for mappings.
+**Important:** This endpoint uses **city-level IDs**, NOT the area IDs from section 5. To discover valid city IDs and day numbers, first fetch `movieTable.asp` via GET and parse the `<select>` dropdowns:
+- `<select name="f_areaId">` — lists all cities with their IDs
+- `<select name="d">` — lists available days with their numeric values
+
+Common city IDs (these differ from the area IDs used by `showTimesAjaxMovies.asp`):
+
+| City ID | City |
+|---------|------|
+| 41 | Tel Aviv / Yafo |
+| 44 | Or Yehuda |
+| 1 | Ashdod |
+| 2 | Ashkelon |
+| 3 | Beer Sheva |
+| 8 | Haifa |
+
+For the full list, always parse the dropdown from the GET response — city IDs may change.
 
 **Parse pattern:**
 ```
@@ -162,7 +177,7 @@ Each theater in grid:
 - Phone: text after <span class="ICPhone">
 ```
 
-### 8. Extra Movie Ratings
+### 8. Extra Movie Ratings (unreliable)
 
 ```
 POST https://www.seret.co.il/ajax/getExtraMovieRatingsAjax.asp
@@ -171,9 +186,11 @@ Content-Type: application/x-www-form-urlencoded
 Body: MID={id}
 ```
 
-Returns HTML with additional rating sources (may be empty for some movies).
+Returns HTML with additional rating sources. **Often returns empty** — this endpoint is unreliable and should not be depended on. The IMDB ID from the movie detail page (section 2) is a more reliable way to cross-reference external ratings.
 
-## Area IDs
+## Area IDs (for showTimesAjaxMovies.asp)
+
+These area IDs are used by the **showtimes endpoint** (section 5) to group results by region. They are NOT the same as the city IDs used by `movieTable.asp` (section 6).
 
 | ID | Area (Hebrew) | Area (English) |
 |----|---------------|----------------|
@@ -185,8 +202,6 @@ Returns HTML with additional rating sources (may be empty for some movies).
 | 31 | שרון-השפלה | Sharon-Hashfela |
 | 34 | אילת | Eilat |
 | 54 | השרון | Hasharon |
-
-For a full list, parse the `<select name="f_areaId">` dropdown from `movieTable.asp`.
 
 ## Response Guidelines
 
