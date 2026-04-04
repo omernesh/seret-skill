@@ -109,8 +109,67 @@ GET https://www.seret.co.il/movies/s_movies.asp?MID={id}
 | מספר ביקורות | `itemprop="reviewCount"` | מספר ביקורות |
 | מספר תגובות | `itemprop="commentCount"` | תגובות משתמשים |
 | פוסטר | `meta property="og:image"` | כתובת מלאה |
-| טריילר | `<source src="https://vdo.seret.co.il/{Name}.mp4">` | בתוך `itemprop="video"` |
 | מזהה IMDB | `<span class="imdbRatingPlugin" data-title="tt{ID}">` | לדוגמה "tt31050594" |
+
+#### טריילר (קישור ישיר)
+
+הטריילר יכול להיות סרטון YouTube מוטמע או קובץ MP4 מאוחסן. יש לבדוק את האלמנט `video#seretPlayer`:
+
+```
+<video id="seretPlayer" data-setup='{ "sources": [{ "type": "video/youtube", "src": "https://www.youtube.com/watch?v=VIDEO_ID" }] }'>
+```
+
+- קישור YouTube: לפענח את תכונת `data-setup` (JSON) ב-`video#seretPlayer` > `sources[0].src`
+- קובץ MP4 מאוחסן: `<source src="https://vdo.seret.co.il/{Name}.mp4">` בתוך אלמנט הווידאו
+- דף טריילר: `https://www.seret.co.il/movies/movieTrailer.asp?MID={id}`
+- כפתור טריילר: `<a href="movieTrailer.asp?MID={id}" class="buttonGR">טריילר</a>`
+
+יש להעדיף תמיד את קישור YouTube כשזמין (איכות גבוהה יותר, נגיש יותר). אם לא זמין, להשתמש בקישור MP4.
+
+#### ציונים ודירוגים (מתחת לטריילר)
+
+דף הסרט מכיל 5 מדדי ציון נפרדים בבלוקים של `div.info-row`:
+
+**1. Seret Score (מדד משולב)**
+```
+מיכל: div.badge-col > div.badge-container
+ציון: אלמנט SVG <text> (ילד ראשון, לדוגמה "5.1")
+תווית: SVG <text> מתחת לציון (לדוגמה "ראוי לצפייה")
+פירוט: div#badgetip (לדוגמה "מבקר: 5.0 · קהל: 5.2 · IMDb: — · כוונה: — · מומנטום: 6.5")
+```
+זהו מדד האיכות המשולב של האתר — שילוב של ציון מבקר, קהל, IMDB, כוונת צפייה ומומנטום.
+
+**2. דירוג הגולשים**
+```
+ציון: span[itemprop="ratingValue"] (לדוגמה "4")
+מקסימום: meta[itemprop="bestRating"] content="10"
+מספר מצביעים: meta[itemprop="reviewCount"] או "N כבר הצביעו"
+פס חזותי: span.RateScaleGreen (לדוגמה width:40% = 4/10)
+```
+
+**3. ציון המבקר**
+```
+ציון: div.critic-score (לדוגמה "5/10")
+שם המבקר: div.critic-name (לדוגמה "יאיר הוכנר")
+ציטוט מהביקורת: div.critic-publication a
+קישור לביקורת המלאה: div.critic-publication a[href]
+כוכבים: div.critic-stars — ספירת span.starw.on (מלא), span.starg (ריק), span.starh (חצי)
+```
+
+**4. מדד פופולריות**
+```
+ציון: div.pop-row div.DarkGreenStrong30 (לדוגמה "3.7/10")
+מגמה: span.trend-arrow (לדוגמה "144.9%" עם חץ עולה/יורד)
+תווית איכות: div.seg-bar[title] (לדוגמה "התעניינות קהל בינונית")
+```
+
+**5. היכן תצפו (סקר קהל)**
+```
+קולנוע: div.watch-fill.cinema + span.watch-fill-label
+בבית: div.watch-fill.home + span.watch-fill-label
+לא אצפה: div.watch-fill.skip + span.watch-fill-label
+סה"כ מצביעים: div.vote-label (לחלץ מספר מ-"N כבר הצביעו")
+```
 
 **תבניות כתובות תמונות:**
 - פוסטר: `https://www.seret.co.il/images/movies/{Name}/{Name}1.jpg`
@@ -254,10 +313,12 @@ Body: MID={id}
 בעת הצגת מידע על סרטים:
 1. **תמיד להציג גם שם בעברית וגם באנגלית** כשזמין
 2. **לעצב שעות הקרנה** מקובצות לפי אזור > בית קולנוע > יום לקריאות
-3. **לכלול את דירוג סרט** (מתוך 10) וקישור IMDB כשזמין
+3. **לכלול את כל הציונים הזמינים:** Seret Score (משולב), דירוג גולשים, ציון מבקר ומדד פופולריות
 4. **קישור לדף הסרט:** `https://www.seret.co.il/movies/s_movies.asp?MID={id}`
 5. **להציג תמונת פוסטר** כשהפלטפורמה תומכת
-6. אם לסרט יש טריילר, לספק את כתובת ה-MP4 הישירה: `https://vdo.seret.co.il/{Name}.mp4`
+6. **תמיד לכלול קישור לטריילר** — להעדיף YouTube, לחלופין MP4. גם לקשר לדף הטריילר: `movieTrailer.asp?MID={id}`
+7. **לכלול תוצאות סקר "היכן תצפו"** כשזמין (אחוזי קולנוע/בבית/לא אצפה)
+8. **לכלול קישור IMDB** כשמזהה IMDB זמין: `https://www.imdb.com/title/{imdbId}/`
 
 ## תהליכי עבודה לדוגמה
 

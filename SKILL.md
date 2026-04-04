@@ -109,8 +109,69 @@ The page contains **schema.org/Movie microdata**. Extract these itemprop fields:
 | Review count | `itemprop="reviewCount"` | Number of reviews |
 | Comment count | `itemprop="commentCount"` | User comments |
 | Poster | `meta property="og:image"` | Full URL |
-| Trailer | `<source src="https://vdo.seret.co.il/{Name}.mp4">` | Inside `itemprop="video"` |
 | IMDB ID | `<span class="imdbRatingPlugin" data-title="tt{ID}">` | e.g. "tt31050594" |
+
+#### Trailer (direct link)
+
+The trailer can be either a YouTube embed or a self-hosted MP4. Check the `video#seretPlayer` element:
+
+```
+<video id="seretPlayer" data-setup='{ "sources": [{ "type": "video/youtube", "src": "https://www.youtube.com/watch?v=VIDEO_ID" }] }'>
+```
+
+- **YouTube trailer:** Parse the `data-setup` JSON attribute on `video#seretPlayer` > `sources[0].src`
+- **Self-hosted MP4:** `<source src="https://vdo.seret.co.il/{Name}.mp4">` inside the video element
+- **Trailer page:** `https://www.seret.co.il/movies/movieTrailer.asp?MID={id}` (also in `meta[itemprop="url"]`)
+- **Trailer button link:** `<a href="movieTrailer.asp?MID={id}" class="buttonGR">טריילר</a>`
+- **Poster/thumbnail:** `video#seretPlayer[poster]` attribute
+
+Always prefer the YouTube URL when available (higher quality, more accessible). Fall back to the MP4 URL.
+
+#### Scores & Ratings (below the trailer)
+
+The movie page has 5 distinct score sections in `div.info-row` blocks:
+
+**1. Seret Score (composite badge)**
+```
+Container: div.badge-col > div.badge-container
+Score: SVG <text> element (first <text> child, e.g. "5.1")
+Label: SVG <text> below score (e.g. "ראוי לצפייה" = "worth watching")
+Breakdown: div#badgetip text (e.g. "מבקר: 5.0 · קהל: 5.2 · IMDb: — · כוונה: — · מומנטום: 6.5")
+```
+This is the site's composite quality index combining critic, audience, IMDB, intent, and momentum scores.
+
+**2. דירוג הגולשים (Viewer Rating)**
+```
+Score: span[itemprop="ratingValue"] (e.g. "4")
+Max: meta[itemprop="bestRating"] content="10"
+Vote count: meta[itemprop="reviewCount"] content (or extract from "N כבר הצביעו" text)
+Visual bar: span.RateScaleGreen style width (e.g. "width:40%" = 4/10)
+```
+
+**3. ציון המבקר (Critic Score)**
+```
+Score: div.critic-score text (e.g. "5/10")
+Critic name: div.critic-name text (e.g. "יאיר הוכנר")
+Review blurb: div.critic-publication a text (e.g. "פגום ומעניין")
+Review link: div.critic-publication a[href] (links to full review)
+Stars: div.critic-stars — count span.starw.on (filled), span.starg (empty), span.starh (half)
+```
+
+**4. מדד פופולריות (Popularity Index)**
+```
+Score: div.pop-row div.DarkGreenStrong30 text (e.g. "3.7/10")
+Trend: span.trend-arrow text (e.g. "144.9%" with up/down SVG arrow)
+Quality label: div.seg-bar[title] (e.g. "התעניינות קהל בינונית")
+Visual: span.seg.filled (filled segments) vs span.seg.empty
+```
+
+**5. היכן תצפו (Where Will You Watch — audience poll)**
+```
+Cinema %: div.watch-fill.cinema style width + span.watch-fill-label
+Home %: div.watch-fill.home style width + span.watch-fill-label
+Won't watch %: div.watch-fill.skip style width + span.watch-fill-label
+Total votes: div.vote-label text (extract number from "N כבר הצביעו")
+```
 
 **Image URL patterns:**
 - Poster: `https://www.seret.co.il/images/movies/{Name}/{Name}1.jpg`
@@ -254,10 +315,12 @@ These area IDs are used by the **showtimes endpoint** (section 5) to group resul
 When presenting movie information:
 1. **Always show both Hebrew and English titles** when available
 2. **Format showtimes** grouped by area > theater > day for readability
-3. **Include the Seret rating** (out of 10) and IMDB link when available
+3. **Include all available scores:** Seret Score (composite), viewer rating, critic score, and popularity index
 4. **Link to the movie page:** `https://www.seret.co.il/movies/s_movies.asp?MID={id}`
 5. **Show poster image** when the platform supports it
-6. If a movie has a trailer, provide the direct MP4 URL: `https://vdo.seret.co.il/{Name}.mp4`
+6. **Always include the trailer link** — prefer YouTube URL, fall back to MP4. Also link the trailer page: `movieTrailer.asp?MID={id}`
+7. **Include the "Where to watch" poll** results when available (cinema/home/skip percentages)
+8. **Include IMDB link** when the IMDB ID is available: `https://www.imdb.com/title/{imdbId}/`
 
 ## Example Workflows
 
