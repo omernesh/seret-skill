@@ -1,6 +1,6 @@
 ---
 name: seret-movies
-description: >-
+description: >
   Search Israeli movie showtimes, ratings, and cinema info from seret.co.il.
   Use when user asks about movies playing in Israel, Israeli cinema showtimes,
   "ma makrineem hayom", "sratim hadashim", "seret", movie tickets in Israel,
@@ -36,7 +36,7 @@ metadata:
     en: Seret - Israeli Movie Information
   display_description:
     he: "חיפוש שעות הקרנה, דירוגים ומידע על סרטים מ-seret.co.il — מאגר הסרטים המוביל בישראל"
-    en: >-
+    en: >
       Search Israeli movie showtimes, ratings, and cinema info from seret.co.il —
       Israel's leading movie database
   supported_agents:
@@ -118,7 +118,6 @@ The trailer can be either a YouTube embed or a self-hosted MP4. Check the `video
 ```
 <video id="seretPlayer" data-setup='{ "sources": [{ "type": "video/youtube", "src": "https://www.youtube.com/watch?v=VIDEO_ID" }] }'>
 ```
-
 - **YouTube trailer:** Parse the `data-setup` JSON attribute on `video#seretPlayer` > `sources[0].src`
 - **Self-hosted MP4:** `<source src="https://vdo.seret.co.il/{Name}.mp4">` inside the video element
 - **Trailer page:** `https://www.seret.co.il/movies/movieTrailer.asp?MID={id}` (also in `meta[itemprop="url"]`)
@@ -173,17 +172,22 @@ Won't watch %: div.watch-fill.skip style width + span.watch-fill-label
 Total votes: div.vote-label text (extract number from "N כבר הצביעו")
 ```
 
+**Movie title:** Use `<meta property="og:title">` instead of `h1[itemprop="name"]` — the h1 selectors are unreliable on this site.
+```python
+og_title = re.search(r'<meta property="og:title" content="([^"]+)"', html)
+# Returns e.g. "מייקל" (Hebrew title only, no English)
+```
+
+**English title:** Use `<meta property="og:description">` or the second `<h2>` — test carefully, many pages don't have an English title.
+
 **Image URL patterns:**
 - Poster: `https://www.seret.co.il/images/movies/{Name}/{Name}1.jpg`
 - Thumbnail: `...{Name}0.jpg`
 - Cover: `...{Name}_coverBig.jpg`
 - Video poster: `...{Name}2.jpg`
+- Note: `Name` comes from the URL path on the page — extract from `<a href="s_movies.asp?mid={id}" class="bt_rounded2">MovieName</a>`
 
 ### 3. Now Showing (In Theaters)
-
-```
-GET https://www.seret.co.il/movies/newmovies.asp
-```
 
 **Parse pattern — movie cards:**
 ```
@@ -235,7 +239,7 @@ Days: <div class="dayline"> containing:
   - Showtimes: <div class="stbox" title="D/M/YYYY | Hall N">HH:MM</div>
 ```
 
-### 6. Movie Showtimes Table (by city + day)
+### 6. Movie Showtimes Table (by city + day) — PREFERRED for showtimes
 
 ```
 POST https://www.seret.co.il/movies/movieTable.asp
@@ -244,30 +248,37 @@ Content-Type: application/x-www-form-urlencoded
 Body: d={dayNumber}&f_areaId={cityId}
 ```
 
-**Important:** This endpoint uses **city-level IDs**, NOT the area IDs from section 5. To discover valid city IDs and day numbers, first fetch `movieTable.asp` via GET and parse the `<select>` dropdowns:
-- `<select name="f_areaId">` — lists all cities with their IDs
-- `<select name="d">` — lists available days with their numeric values
+**Important:** This endpoint uses **city-level IDs**, NOT the area IDs from section 5.
+To discover valid city IDs and day numbers, first fetch `movieTable.asp` via GET and parse the `<select>` dropdowns:
+- `<select name="f_areaId">` — lists all cities with their IDs (e.g. `VALUE=35` for Rishon LeZion)
+- `<select name="d">` — lists available days with numeric values (e.g. `VALUE=2` = today)
 
-Common city IDs (these differ from the area IDs used by `showTimesAjaxMovies.asp`):
+**Day numbering:** The `d` parameter is NOT a simple date offset. Always parse from the dropdown.
+- Day 1 = empty (all days), Day 2 = today, Day 3 = tomorrow, etc.
+- Always inspect the dropdown to get exact values for the current schedule.
+
+Common city IDs (parse from dropdown for accuracy — these differ from area IDs):
 
 | City ID | City |
 |---------|------|
+| 35 | Rishon LeZion / ראשון לציון |
 | 41 | Tel Aviv / Yafo |
-| 44 | Or Yehuda |
 | 1 | Ashdod |
-| 2 | Ashkelon |
 | 3 | Beer Sheva |
 | 8 | Haifa |
 
-For the full list, always parse the dropdown from the GET response — city IDs may change.
-
-**Parse pattern:**
+**Parse pattern (VERIFIED):**
 ```
 Each row: <div class="comboline">
-- Time: <div class="TitGreen18" style="width:70px;...">HH:MM</div>
-- Theater: <a href=s_theatres.asp?tid={id} class="TitGreen18">Name</a>
-- Movie: <a href="s_movies.asp?mid={id}" class="bt_rounded2" title="full title">Name</a>
+  - Time: <div class="TitGreen18" style="width:70px;float:right;display:inline-block;">HH:MM</div>
+  - Theater: <a href="s_theatres.asp?tid={id}" class="TitGreen18" title="...">Theater Name</a>
+  - Movie: <a href="s_movies.asp?mid={id}" class="bt_rounded2" title="...">Movie Title</a>
+
+Note: The title attribute contains "לחצו לעמוד הסרט" prefix. Extract the text content of the <a> tag directly.
+Regex (Python): re.search(r'href="s_movies\.asp\?mid=(\d+)"[^>]*class="bt_rounded2"[^>]*>([^<]+)<', block)
 ```
+
+**Alternative: fetch all then filter.** This endpoint returns ALL movies for the city in one request — faster to fetch once and filter client-side by genre than to make per-movie requests.
 
 ### 7. List Theaters by Area
 
